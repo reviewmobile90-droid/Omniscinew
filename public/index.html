@@ -4,46 +4,146 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Omnisci Core Engine</title>
+
     <script src="https://js.puter.com/v2/"></script>
+
     <style>
-        body { font-family: sans-serif; background-color: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background-color: #1e293b; padding: 2rem; border-radius: 12px; width: 100%; max-width: 500px; text-align: center; }
-        input[type="text"] { width: 100%; padding: 12px; margin-bottom: 1rem; border: 1px solid #475569; border-radius: 6px; background-color: #0f172a; color: #fff; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background-color: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        #image-result-display { margin-top: 1.5rem; min-height: 150px; display: flex; justify-content: center; align-items: center; border: 2px dashed #475569; border-radius: 8px; background-color: #0f172a; padding: 10px; }
-        #image-result-display img { max-width: 100%; height: auto; border-radius: 6px; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #1e293b;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 1rem;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            background-color: #0f172a;
+            color: #fff;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        #image-result-display {
+            margin-top: 1.5rem;
+            min-height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px dashed #475569;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #0f172a;
+        }
+        #image-result-display img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+        }
+        .loading-text {
+            color: #94a3b8;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <h2 style="color: #38bdf8;">Omnisci Graphics Studio</h2>
+        <h2 style="margin-top: 0; color: #38bdf8;">Omnisci Graphics Studio</h2>
         <input type="text" id="prompt-input" placeholder="Describe your infographic design...">
         <button id="generate-btn">Generate Graphic Layout</button>
+        
         <div id="image-result-display">
-            <p>No graphic generated yet.</p>
+            <p class="loading-text">No graphic generated yet.</p>
         </div>
     </div>
+
     <script>
         document.getElementById('generate-btn').addEventListener('click', async () => {
             const userPrompt = document.getElementById('prompt-input').value.trim();
             const displayContainer = document.getElementById('image-result-display');
-            if (!userPrompt) return alert("Please type a layout concept first!");
             
-            const optimizedPrompt = userPrompt + ", clean infographic design, professional vector style, compliance layout, legal limits";
-            displayContainer.innerHTML = "<p>🎨 Synthesizing legal infographics layout canvas...</p>";
+            if (!userPrompt) {
+                return alert("Please type a layout concept first!");
+            }
             
+            // Apply corporate safety guardrails & layout optimizations to the prompt
+            const optimizedPrompt = `${userPrompt}, clean infographic design, professional vector style, clear elements, high resolution, compliance layout, legal limits`;
+            
+            displayContainer.innerHTML = "<p class='loading-text'>🎨 Synthesizing legal infographics layout canvas...</p>";
+
             try {
-                const imgElement = await puter.ai.txt2img(optimizedPrompt, { model: "gpt-image-2", quality: "high" });
-                displayContainer.innerHTML = '';
-                displayContainer.appendChild(imgElement);
+                // Call Puter's core generation API which returns a raw secure URL string
+                const imageUrl = await puter.ai.txt2img(optimizedPrompt, { 
+                    model: "gpt-image-2",
+                    quality: "high"
+                });
+
+                // Clear the loader frame safely
+                displayContainer.innerHTML = ''; 
+
+                // Create an explicit HTML image element and assign the URL source string
+                const finalImage = document.createElement('img');
+                finalImage.src = imageUrl;
+                finalImage.style.maxWidth = "100%";
+                finalImage.style.borderRadius = "8px";
+                finalImage.style.boxShadow = "0 4px 12px rgba(0,0,0,0.2)";
+                
+                // Inject the completed image node into your visual layout panel
+                displayContainer.appendChild(finalImage);
+
             } catch (error) {
+                console.warn("Primary path congested. Diverting to fallback array...", error);
+                
                 try {
-                    displayContainer.innerHTML = "<p>🔄 Routing to backup Flux matrix...</p>";
-                    const fallbackImg = await puter.ai.txt2img(optimizedPrompt, { model: "black-forest-labs/flux-schnell" });
+                    displayContainer.innerHTML = "<p class='loading-text'>🔄 Routing request to backup Flux layout matrix...</p>";
+                    
+                    // Fallback to Flux Schnell engine if the primary engine encounters structural layout limits
+                    const fallbackUrl = await puter.ai.txt2img(optimizedPrompt, { 
+                        model: "black-forest-labs/flux-schnell" 
+                    });
+                    
                     displayContainer.innerHTML = '';
-                    displayContainer.appendChild(fallbackImg);
-                } catch (fErr) {
-                    displayContainer.innerHTML = "<p style='color:#ef4444;'>⚠️ Generation array busy.</p>";
+                    
+                    const fallbackImage = document.createElement('img');
+                    fallbackImage.src = fallbackUrl;
+                    fallbackImage.style.maxWidth = "100%";
+                    fallbackImage.style.borderRadius = "8px";
+                    
+                    displayContainer.appendChild(fallbackImage);
+
+                } catch (failoverError) {
+                    console.error("All generation nodes exhausted:", failoverError);
+                    displayContainer.innerHTML = "<p style='color:#ef4444; font-weight:bold;'>⚠️ Generation array busy. Please verify your token pool balance and try again.</p>";
                 }
             }
         });
