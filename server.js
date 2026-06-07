@@ -1,63 +1,76 @@
-const express = require('express');
-const path = require('path');
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { GoogleGenAI } from '@google/genai';
+
+dotenv.config();
+
 const app = express();
-const PORT = 3000;
+const port = process.env.PORT || 3000;
 
-// API CONFIGURATION
-const GEMINI_KEY = 'AQ.Ab8RN6LqbBD7VYVqFJ3kGhJO1Ms2tJ07907vLwEvMpgByuHRug';
-let stats = { totalMessages: 0, totalImages: 0 };
+// Enable cross-origin resource sharing and JSON body parsing
+app.use(cors());
+app.use(express.json());
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static frontend assets cleanly from the public folder
+app.use(express.static('public'));
 
-const SYSTEM_PROMPT = "You are OMNISCI, a Sovereign Intelligence System. Provide expert, objective, and high-fidelity analysis. You possess live web access. Never provide fallback responses; extract all available data to answer accurately.";
+// Initialize the official Google Gen AI SDK
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-app.post('/api/chat', async (req, res) => {
-    stats.totalMessages++;
-    try {
-        const { messages } = req.body;
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-                contents: messages.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
-                tools: [{ google_search: {} }],
-                generationConfig: { maxOutputTokens: 4000, temperature: 0.7 }
-            })
-        });
-        
-        const data = await response.json();
-        
-        // DEEP DATA EXTRACTION (Fixes "Interrupted/Undefined" errors)
-        let reply = "";
-        if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
-            reply = data.candidates[0].content.parts
-                .filter(p => p.text)
-                .map(p => p.text)
-                .join("");
-        }
-
-        if(!reply || reply.length < 5) {
-            reply = "Grounding analysis complete. The engine requires a more granular inquiry for this specific data stream.";
-        }
-        
-        res.json({ reply });
-    } catch (err) { res.status(500).json({ error: "Core sync failure." }); }
-});
-
-app.post('/api/image', async (req, res) => {
-    stats.totalImages++;
+/**
+ * Core Text Analysis API Route
+ * Processes compliance inquiries and streams back structured legal architecture audits
+ */
+app.post('/api/analyze', async (req, res) => {
     try {
         const { prompt } = req.body;
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true&model=flux&seed=${Math.floor(Math.random()*1000000)}`;
-        const imgRes = await fetch(imageUrl);
-        const buffer = await imgRes.arrayBuffer();
-        res.json({ image: Buffer.from(buffer).toString('base64') });
-    } catch (err) { res.status(500).json({ error: "Visual forge timeout." }); }
+
+        if (!prompt || prompt.trim() === "") {
+            return res.status(400).json({ 
+                success: false,
+                error: "Inquiry stream empty. Please enter a valid compliance query." 
+            });
+        }
+
+        console.log(`[Omnisci Engine] Processing compliance data stream for: "${prompt}"`);
+
+        // Trigger Gemini 2.5 Flash with custom engineering and legal persona instructions
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: [
+                {
+                    role: 'user',
+                    parts: [
+                        {
+                            text: `You are the Omnisci Core Analytics Engine, an elite expert in software architecture, corporate compliance, global data privacy laws, and software licensing legal limits. Provide a detailed, deep structural legal/technical audit for the following request: ${prompt}`
+                        }
+                    ]
+                }
+            ]
+        });
+
+        const generatedText = response.text || "Analysis complete. System array yielded empty text nodes.";
+
+        // Send a clean, standard JSON response back to the client application
+        return res.json({ 
+            success: true, 
+            analysis: generatedText 
+        });
+
+    } catch (error) {
+        console.error("[Omnisci Engine Error]:", error);
+        return res.status(500).json({ 
+            success: false, 
+            error: "Internal analytics engine connection timeout.",
+            details: error.message 
+        });
+    }
 });
 
-app.get('/api/admin/stats', (req, res) => res.json(stats));
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-
-app.listen(PORT, () => console.log('✦ OMNISCI v13.5 Enterprise Handover Active'));
+// Start the server listener array
+app.listen(port, () => {
+    console.log(`===================================================`);
+    console.log(` Omnisci Backend Active & Listening on Port ${port} `);
+    console.log(`===================================================`);
+});
