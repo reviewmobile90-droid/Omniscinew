@@ -17,17 +17,29 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .main-wrapper {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
         }
         .container {
             background-color: #1e293b;
             padding: 2rem;
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            width: 100%;
-            max-width: 500px;
             text-align: center;
         }
-        input[type="text"] {
+        h2 {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+        input[type="text"], textarea {
             width: 100%;
             padding: 12px;
             margin-bottom: 1rem;
@@ -37,11 +49,15 @@
             color: #fff;
             box-sizing: border-box;
             font-size: 1rem;
+            font-family: inherit;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 100px;
         }
         button {
             width: 100%;
             padding: 12px;
-            background-color: #2563eb;
             color: white;
             border: none;
             border-radius: 6px;
@@ -50,100 +66,157 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        button:hover {
-            background-color: #1d4ed8;
-        }
-        #image-result-display {
+        .blue-btn { background-color: #2563eb; }
+        .blue-btn:hover { background-color: #1d4ed8; }
+        .cyan-btn { background-color: #0891b2; }
+        .cyan-btn:hover { background-color: #0e7490; }
+        
+        .result-display {
             margin-top: 1.5rem;
-            min-height: 150px;
+            min-height: 120px;
             display: flex;
             justify-content: center;
             align-items: center;
             border: 2px dashed #475569;
             border-radius: 8px;
-            padding: 10px;
+            padding: 15px;
             background-color: #0f172a;
+            text-align: left;
+            overflow-x: auto;
         }
-        #image-result-display img {
+        .result-display img {
             max-width: 100%;
             height: auto;
             border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         .loading-text {
             color: #94a3b8;
             font-style: italic;
+            margin: 0;
+            text-align: center;
+            width: 100%;
+        }
+        .analysis-text {
+            white-space: pre-wrap;
+            margin: 0;
+            line-height: 1.6;
+            color: #e2e8f0;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2 style="margin-top: 0; color: #38bdf8;">Omnisci Graphics Studio</h2>
-        <input type="text" id="prompt-input" placeholder="Describe your infographic design...">
-        <button id="generate-btn">Generate Graphic Layout</button>
-        
-        <div id="image-result-display">
-            <p class="loading-text">No graphic generated yet.</p>
+    <div class="main-wrapper">
+
+        <div class="container">
+            <h2 style="color: #38bdf8;">Omnisci Legal Analytics Studio</h2>
+            <textarea id="chat-input" placeholder="Type your compliance, legal limit, or architectural risk inquiry here..."></textarea>
+            <button id="analyze-btn" class="blue-btn">Run Legal Compliance Audit</button>
+            
+            <div id="chat-result-display" class="result-display">
+                <p class="loading-text">System idle. Awaiting inquiry input...</p>
+            </div>
         </div>
+
+        <div class="container">
+            <h2 style="color: #22d3ee;">Omnisci Graphics Studio</h2>
+            <input type="text" id="graphic-input" placeholder="Describe your infographic layout design...">
+            <button id="generate-btn" class="cyan-btn">Generate Graphic Layout</button>
+            
+            <div id="image-result-display" class="result-display">
+                <p class="loading-text">No graphic layouts generated yet.</p>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        document.getElementById('generate-btn').addEventListener('click', async () => {
-            const userPrompt = document.getElementById('prompt-input').value.trim();
-            const displayContainer = document.getElementById('image-result-display');
-            
-            if (!userPrompt) {
-                return alert("Please type a layout concept first!");
+        /* =========================================================================
+           LOGIC LAYER 1: Legal Chat Analytics Studio (Backend Gemini API Routing)
+           ========================================================================= */
+        document.getElementById('analyze-btn').addEventListener('click', async () => {
+            const promptText = document.getElementById('chat-input').value.trim();
+            const chatDisplay = document.getElementById('chat-result-display');
+
+            if (!promptText) {
+                return alert("Please enter a legal or compliance scenario to analyze.");
             }
-            
-            // Apply corporate safety guardrails & layout optimizations to the prompt
-            const optimizedPrompt = `${userPrompt}, clean infographic design, professional vector style, clear elements, high resolution, compliance layout, legal limits`;
-            
-            displayContainer.innerHTML = "<p class='loading-text'>🎨 Synthesizing legal infographics layout canvas...</p>";
+
+            chatDisplay.innerHTML = "<p class='loading-text'>🧠 Processing data streams and conducting compliance analysis...</p>";
 
             try {
-                // Call Puter's core generation API which returns a raw secure URL string
+                // Send the text payload straight to your live operational Express server API route
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: promptText })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Inject and display the clean generated analysis response text strings
+                    chatDisplay.innerHTML = `<pre class="analysis-text">${data.analysis}</pre>`;
+                } else {
+                    chatDisplay.innerHTML = `<p style="color:#ef4444; font-weight:bold; margin:0;">⚠️ Core Engine Warning: ${data.error}</p>`;
+                }
+
+            } catch (error) {
+                console.error("Communication channel error:", error);
+                chatDisplay.innerHTML = "<p style='color:#ef4444; font-weight:bold; margin:0;'>⚠️ Connection failed. Please ensure your backend server node is running.</p>";
+            }
+        });
+
+        /* =========================================================================
+           LOGIC LAYER 2: Graphics Studio (Puter Text-to-Image Generation Engine)
+           ========================================================================= */
+        document.getElementById('generate-btn').addEventListener('click', async () => {
+            const userPrompt = document.getElementById('graphic-input').value.trim();
+            const imageDisplay = document.getElementById('image-result-display');
+            
+            if (!userPrompt) {
+                return alert("Please type an infographic layout concept first!");
+            }
+            
+            const optimizedPrompt = `${userPrompt}, clean infographic design, professional vector style, clear elements, high resolution, compliance layout, legal limits`;
+            imageDisplay.innerHTML = "<p class='loading-text'>🎨 Synthesizing legal infographics layout canvas...</p>";
+
+            try {
+                // Call Puter's API which yields a raw direct file URL location string
                 const imageUrl = await puter.ai.txt2img(optimizedPrompt, { 
                     model: "gpt-image-2",
                     quality: "high"
                 });
 
-                // Clear the loader frame safely
-                displayContainer.innerHTML = ''; 
+                imageDisplay.innerHTML = ''; 
 
-                // Create an explicit HTML image element and assign the URL source string
+                // explicitly convert the raw string asset path source directly into a working HTML <img> node
                 const finalImage = document.createElement('img');
                 finalImage.src = imageUrl;
-                finalImage.style.maxWidth = "100%";
-                finalImage.style.borderRadius = "8px";
-                finalImage.style.boxShadow = "0 4px 12px rgba(0,0,0,0.2)";
                 
-                // Inject the completed image node into your visual layout panel
-                displayContainer.appendChild(finalImage);
+                imageDisplay.appendChild(finalImage);
 
             } catch (error) {
-                console.warn("Primary path congested. Diverting to fallback array...", error);
+                console.warn("Primary path congested. Diverting to backup matrix...", error);
                 
                 try {
-                    displayContainer.innerHTML = "<p class='loading-text'>🔄 Routing request to backup Flux layout matrix...</p>";
+                    imageDisplay.innerHTML = "<p class='loading-text'>🔄 Routing request to backup Flux layout matrix...</p>";
                     
-                    // Fallback to Flux Schnell engine if the primary engine encounters structural layout limits
                     const fallbackUrl = await puter.ai.txt2img(optimizedPrompt, { 
                         model: "black-forest-labs/flux-schnell" 
                     });
                     
-                    displayContainer.innerHTML = '';
+                    imageDisplay.innerHTML = '';
                     
                     const fallbackImage = document.createElement('img');
                     fallbackImage.src = fallbackUrl;
-                    fallbackImage.style.maxWidth = "100%";
-                    fallbackImage.style.borderRadius = "8px";
                     
-                    displayContainer.appendChild(fallbackImage);
+                    imageDisplay.appendChild(fallbackImage);
 
                 } catch (failoverError) {
                     console.error("All generation nodes exhausted:", failoverError);
-                    displayContainer.innerHTML = "<p style='color:#ef4444; font-weight:bold;'>⚠️ Generation array busy. Please verify your token pool balance and try again.</p>";
+                    imageDisplay.innerHTML = "<p style='color:#ef4444; font-weight:bold; margin:0;'>⚠️ Generation array busy. Please verify your token pool balance and try again.</p>";
                 }
             }
         });
