@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMNISCI — Sovereign Intelligence</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --accent: #00f2ff; --glass: rgba(255, 255, 255, 0.05); --border: rgba(255, 255, 255, 0.1); }
+        * { box-sizing: border-box; font-family: 'Inter', -apple-system, sans-serif; transition: 0.3s; }
+        body { margin: 0; display: flex; height: 100vh; overflow: hidden; background: #000 url('https://images.unsplash.com/photo-1464802686167-b939a67a06d1?q=80&w=2070&auto=format&fit=crop') no-repeat center center/cover; }
+
+        /* AUTH GLASSMORPHISM */
+        #auth-screen { position: fixed; inset: 0; z-index: 20000; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); backdrop-filter: blur(25px); }
+        .glass-card { width: 440px; background: var(--glass); border: 1px solid var(--border); backdrop-filter: blur(40px); padding: 50px; border-radius: 30px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
+        .auth-input { width: 100%; padding: 16px; margin: 10px 0; background: rgba(0,0,0,0.4); border: 1px solid #333; color: #fff; border-radius: 12px; font-size: 16px; outline: none; }
+        .auth-btn { width: 100%; padding: 16px; background: var(--accent); color: #000; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; margin-top: 15px; font-size: 16px; }
+
+        /* DASHBOARD */
+        #dashboard { display: none; flex: 1; height: 100vh; backdrop-filter: blur(10px); }
+        aside { width: 280px; background: rgba(0,0,0,0.6); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; }
+        .nav-item { padding: 14px 20px; border-radius: 12px; cursor: pointer; color: #aaa; font-size: 15px; display: flex; align-items: center; gap: 15px; margin-bottom: 8px; }
+        .nav-item:hover, .nav-item.active { background: var(--glass); color: #fff; border: 1px solid var(--border); }
+
+        main { flex: 1; display: flex; flex-direction: column; position: relative; }
+        #chat-win { flex: 1; overflow-y: auto; padding: 60px 15% 150px 15%; display: flex; flex-direction: column; gap: 30px; }
+        .msg { font-size: 17px; line-height: 1.8; color: #efefef; width: 100%; }
+        .msg.user { color: #fff; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        
+        .input-outer { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 15% 40px 15%; background: linear-gradient(transparent, rgba(0,0,0,0.9) 60%); }
+        .input-box { background: rgba(45,45,45,0.7); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 20px; padding: 15px; display: flex; align-items: center; gap: 15px; }
+        textarea { flex: 1; background: transparent; border: none; color: #fff; font-size: 17px; outline: none; resize: none; height: 26px; }
+
+        .token-badge { position: fixed; top: 25px; right: 25px; background: rgba(0,0,0,0.6); border: 1px solid var(--accent); padding: 8px 22px; border-radius: 30px; cursor: pointer; color: var(--accent); font-weight: 900; z-index: 1000; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.97); z-index: 30000; padding: 40px; overflow-y: auto; }
+        .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 1200px; margin: 60px auto; }
+        .plan-card { background: rgba(255,255,255,0.03); border: 1px solid #333; padding: 40px 25px; border-radius: 25px; text-align: center; }
+        .plan-btn { width: 100%; padding: 12px; background: #fff; color: #000; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .disclaimer { position: absolute; bottom: 10px; width: 100%; text-align: center; font-size: 11px; color: #666; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-screen">
+        <div class="glass-card">
+            <h1 style="color:var(--accent); letter-spacing: 5px;">OMNISCI</h1>
+            <p>Unified Sovereign Intelligence</p>
+            <input type="email" id="email" class="auth-input" placeholder="Email address">
+            <input type="password" id="pw" class="auth-input" placeholder="Password">
+            <button onclick="login()" class="auth-btn">CONTINUE</button>
+            <div style="color: #666; font-size: 13px; margin: 20px 0;">OR</div>
+            <button class="auth-btn" style="background:#fff; color:#000;">Continue with Google</button>
+        </div>
+    </div>
+
+    <div id="dashboard" style="display:flex;">
+        <aside>
+            <div style="padding: 20px 10px; font-weight: 900; color: var(--accent); letter-spacing: 3px; font-size: 22px;">OMNISCI</div>
+            <div class="nav-item active" onclick="showView('v-chat', this)"><i class="fa fa-brain"></i> Intelligence</div>
+            <div class="nav-item" onclick="showView('v-img', this)"><i class="fa fa-palette"></i> Visual Forge</div>
+            <div class="nav-item" onclick="showView('v-set', this)"><i class="fa fa-shield-halved"></i> Governance</div>
+            <div class="nav-item" onclick="showModal('m-pay')" style="margin-top:auto; color:gold;"><i class="fa fa-bolt"></i> Upgrade</div>
+        </aside>
+
+        <main>
+            <div class="token-badge" onclick="showModal('m-pay')">CREDITS: <span id="c-val">--</span></div>
+            <section id="v-chat" class="view" style="display: flex; flex-direction: column; height: 100%;"><div id="chat-win"></div><div class="input-outer"><div class="input-box"><textarea id="u-in" placeholder="Inquire the universe..."></textarea><i class="fa fa-paper-plane" style="color:#fff; cursor:pointer;" onclick="handleChat()"></i></div></div></section>
+            <section id="v-img" class="view" style="display:none; padding: 100px 15%;"><h1 style="color:#fff; font-size: 40px;">Visual Forge</h1><div class="input-box"><textarea id="img-in" placeholder="Forge a visual..."></textarea><i class="fa fa-bolt" style="color:var(--accent); cursor:pointer;" onclick="handleImage()"></i></div><div id="img-result" style="margin-top:50px; text-align:center;"></div></section>
+            <section id="v-set" class="view" style="display:none; padding: 100px 15%;"><div style="background:rgba(255,255,255,0.03); padding:40px; border-radius:20px; border: 1px solid #333;"><h2>Verified Identity</h2><p id="display-email">--</p><p style="font-size: 14px; color: #555;">Governing Law Applied.</p><button onclick="localStorage.clear(); location.reload();" style="color:#ff4b4b; background:none; border:none; cursor:pointer; font-weight:bold; margin-top: 30px;">Sign out</button></div></section>
+            <div class="disclaimer">Intelligence can make mistakes. Please check. | OMNISCI do not store personal details.</div>
+        </main>
+    </div>
+
+    <div id="m-pay" class="modal">
+        <h1 style="text-align: center; color: #fff; font-size: 45px;">Growth Plans</h1>
+        <div class="pricing-grid">
+            <div class="plan-card"><h3>Basics</h3><div style="font-size:30px; margin:15px 0;">₹149</div><button onclick="refill()" class="plan-btn">Upgrade</button></div>
+            <div class="plan-card" style="border-color:var(--accent)"><h3>Intermediate</h3><div style="font-size:30px; margin:15px 0;">₹399</div><button onclick="refill()" class="plan-btn" style="background:var(--accent)">TRENDING</button></div>
+            <div class="plan-card"><h3>Expert</h3><div style="font-size:30px; margin:15px 0;">₹699</div><button onclick="refill()" class="plan-btn">Upgrade</button></div>
+            <div class="plan-card"><h3>Groups</h3><div style="font-size:30px; margin:15px 0;">₹1299</div><button onclick="refill()" class="plan-btn">For Teams</button></div>
+        </div>
+        <center><button onclick="closeModal('m-pay')" style="color:#fff; background:none; border:none; text-decoration:underline; cursor:pointer; font-size: 18px;">Back to AI</button></center>
+    </div>
+
+    <script>
+        let credits = 10000; let currentUser = "";
+        function login() {
+            currentUser = document.getElementById('email').value.trim(); if(!currentUser) return;
+            localStorage.setItem('omniUser', currentUser);
+            credits = parseInt(localStorage.getItem('credits_' + currentUser)) || 10000;
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'flex';
+            document.getElementById('display-email').innerText = currentUser;
+            updateUI();
+        }
+        if(localStorage.getItem('omniUser')) { document.getElementById('email').value = localStorage.getItem('omniUser'); login(); }
+        function updateUI() { document.getElementById('c-val').innerText = credits.toLocaleString(); localStorage.setItem('credits_' + currentUser, credits); }
+        function showView(id, btn) { document.querySelectorAll('.view').forEach(v=>v.style.display='none'); document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); document.getElementById(id).style.display = (id==='v-chat') ? 'flex' : 'block'; btn.classList.add('active'); }
+        async function handleChat() {
+            const val = document.getElementById('u-in').value.trim(); if(!val || credits < 20) return;
+            addMsg(val, 'user'); document.getElementById('u-in').value = '';
+            try {
+                const res = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({messages:[{role:'user', content:val}]}) });
+                const data = await res.json(); addMsg(data.reply, 'ai'); credits -= 20; updateUI(); 
+            } catch(e) { addMsg("Core sync lost.", 'ai'); }
+        }
+        function addMsg(t, type) { const win = document.getElementById('chat-win'); const div = document.createElement('div'); div.className = `msg ${type}`; div.innerText = t; win.appendChild(div); win.scrollTop = win.scrollHeight; }
+        async function handleImage() {
+            const p = document.getElementById('img-in').value.trim(); if(!p || credits < 500) return;
+            document.getElementById('img-result').innerHTML = "<h3 style='color:var(--accent)'>Forging High-Fidelity visual...</h3>";
+            try {
+                const res = await fetch('/api/image', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({prompt:p}) });
+                const data = await res.json();
+                document.getElementById('img-result').innerHTML = `<img src="data:image/jpeg;base64,${data.image}" style="width:100%; max-width:800px; border-radius:20px; box-shadow: 0 40px 80px rgba(0,0,0,0.8); border: 1px solid var(--border);">`;
+                credits -= 500; updateUI();
+            } catch(e) { alert("Forge failed."); }
+        }
+        function showModal(id) { document.getElementById(id).style.display='block'; }
+        function closeModal(id) { document.getElementById(id).style.display='none'; }
+        function refill() { alert("SaaS Payment Demo Successful!"); credits += 100000; updateUI(); closeModal('m-pay'); }
+        document.getElementById('u-in').addEventListener('keydown', (e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleChat(); } });
+    </script>
+</body>
+</html>
